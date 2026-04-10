@@ -100,11 +100,9 @@ async function startStreaming(data) {
   let firstTokenTime = 0;
   let chunkCount = 0;
 
-  // Connect to service worker for streaming — avoids CORS/Origin issues with local servers
-  const port = chrome.runtime.connect({ name: "stream" });
-
-  port.onMessage.addListener((msg) => {
-    if (msg.type === "chunk") {
+  // Listen for streaming chunks from the service worker
+  chrome.runtime.onMessage.addListener(function streamListener(msg) {
+    if (msg.type === "stream-chunk") {
       if (!firstTokenTime) {
         firstTokenTime = performance.now();
       }
@@ -113,7 +111,10 @@ async function startStreaming(data) {
       streamText.innerHTML = renderMarkdown(fullSummary);
       streamText.className = "streaming-cursor rendered";
 
-    } else if (msg.type === "done") {
+    } else if (msg.type === "stream-done") {
+      // Remove this listener
+      chrome.runtime.onMessage.removeListener(streamListener);
+
       const streamEndTime = performance.now();
       streamText.className = "rendered";
 
@@ -134,9 +135,9 @@ async function startStreaming(data) {
         ${warnHtml}
       `);
 
-      port.disconnect();
+    } else if (msg.type === "stream-error") {
+      chrome.runtime.onMessage.removeListener(streamListener);
 
-    } else if (msg.type === "error") {
       if (fullSummary) {
         streamText.className = "rendered";
         contentEl.insertAdjacentHTML("beforeend", `
@@ -158,13 +159,12 @@ async function startStreaming(data) {
       document.getElementById("btnRetry")?.addEventListener("click", () => {
         startStreaming(data);
       });
-      port.disconnect();
     }
   });
 
-  // Start streaming via service worker
-  port.postMessage({
-    type: "start",
+  // Start streaming via service worker (fetch runs there, no CORS/Origin issues)
+  chrome.runtime.sendMessage({
+    type: "start-stream",
     config: data.config,
     title: data.title,
     url: data.url,

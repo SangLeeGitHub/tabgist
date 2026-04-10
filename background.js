@@ -151,25 +151,28 @@ chrome.action.onClicked.addListener(async (tab) => {
   });
 });
 
-// Streaming handler — summary page connects via port, API calls run here (no CORS issues)
-chrome.runtime.onConnect.addListener((port) => {
-  if (port.name !== "stream") return;
+// Streaming handler — summary page sends message, service worker makes the API call (no CORS/Origin issues)
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type !== "start-stream") return false;
 
-  port.onMessage.addListener(async (msg) => {
-    if (msg.type !== "start") return;
+  const { config, title, url, body } = msg;
+  const tabId = sender.tab.id;
 
-    const { config, title, url, body } = msg;
+  sendResponse({ started: true });
 
+  (async () => {
     try {
       const provider = getProvider(config);
 
       for await (const chunk of provider.summarize(title, url, body)) {
-        port.postMessage({ type: "chunk", text: chunk });
+        chrome.tabs.sendMessage(tabId, { type: "stream-chunk", text: chunk });
       }
 
-      port.postMessage({ type: "done", stopReason: provider.state.stopReason });
+      chrome.tabs.sendMessage(tabId, { type: "stream-done", stopReason: provider.state.stopReason });
     } catch (err) {
-      port.postMessage({ type: "error", message: err.message });
+      chrome.tabs.sendMessage(tabId, { type: "stream-error", message: err.message });
     }
-  });
+  })();
+
+  return false;
 });
