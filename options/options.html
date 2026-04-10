@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TabGist — Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <h1>TabGist Settings</h1>
+    <p class="subtitle">Configure your LLM provider and preferences.</p>
+
+    <!-- Preset -->
+    <div class="form-group">
+      <label for="preset">Load Preset</label>
+      <select id="preset">
+        <option value="">— Select a preset —</option>
+        <option value="anthropic">Anthropic (claude-sonnet-4-6)</option>
+        <option value="openai">OpenAI (gpt-4o-mini)</option>
+        <option value="lmstudio">LM Studio (localhost:1234)</option>
+        <option value="llamacpp">llama.cpp server (localhost:8080)</option>
+        <option value="ollama">Ollama (localhost:11434)</option>
+        <option value="openrouter">OpenRouter (openrouter.ai)</option>
+      </select>
+    </div>
+
+    <!-- Provider -->
+    <div class="section-title">Provider</div>
+    <div class="form-group">
+      <label for="provider">Provider Type</label>
+      <select id="provider">
+        <option value="anthropic">Anthropic</option>
+        <option value="openai-compatible">OpenAI Compatible</option>
+      </select>
+    </div>
+
+    <!-- API Keys -->
+    <div class="section-title">API Keys</div>
+    <div class="form-group" id="anthropicKeyGroup">
+      <label for="anthropicKey">Anthropic API Key</label>
+      <input type="password" id="anthropicKey" placeholder="sk-ant-...">
+    </div>
+    <div class="form-group" id="openaiKeyGroup">
+      <label for="openaiKey">OpenAI-Compatible API Key</label>
+      <input type="password" id="openaiKey" placeholder="sk-... (leave empty for local servers)">
+      <p class="hint">Leave empty for local servers (LM Studio, Ollama, etc.)</p>
+    </div>
+
+    <!-- Connection -->
+    <div class="section-title">Connection</div>
+    <div class="form-group">
+      <label for="baseUrl">Base URL</label>
+      <input type="text" id="baseUrl" placeholder="https://api.anthropic.com">
+    </div>
+    <div class="form-group">
+      <label for="model">Model</label>
+      <input type="text" id="model" placeholder="claude-sonnet-4-6">
+    </div>
+    <div class="form-group">
+      <label for="maxTokens">Max Tokens</label>
+      <input type="number" id="maxTokens" value="2048" min="128" max="8192">
+    </div>
+
+    <!-- Language -->
+    <div class="section-title">Summary Language</div>
+    <div class="form-group">
+      <label for="language">Output Language</label>
+      <select id="language">
+        <option value="auto">Auto (follow page language)</option>
+        <option value="ko">한국어</option>
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+        <option value="zh">中文</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+      </select>
+    </div>
+
+    <!-- Test & Save -->
+    <div class="actions">
+      <button class="btn btn-primary" id="btnSave">Save</button>
+      <button class="btn btn-test" id="btnTest">Test Connection</button>
+    </div>
+    <div class="test-result" id="testResult"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="options.js"></script>
+</body>
+</html>

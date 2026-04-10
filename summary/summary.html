@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TabGist — Summary</title>
+  <link rel="stylesheet" href="summary.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 id="title">Loading…</h1>
+      <a id="sourceUrl" class="url" href="#" target="_blank" rel="noopener"></a>
+    </div>
+    <div class="actions" id="actions" style="display:none;">
+      <button class="btn btn-primary" id="btnRegenerate">⟳ Regenerate</button>
+      <button class="btn" id="btnCopy">📋 Copy</button>
+      <button class="btn" id="btnOpen">↗ Open Original</button>
+      <button class="btn" id="btnClose">✕ Close</button>
+    </div>
+    <div class="summary-content" id="content">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Summarizing page…</p>
+      </div>
+    </div>
+  </div>
+  <script src="../providers/anthropic.js"></script>
+  <script src="../providers/openai.js"></script>
+  <script src="../providers/index.js"></script>
+  <script src="summary.js"></script>
+</body>
+</html>

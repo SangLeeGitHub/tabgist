@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "TabGist",
+  "version": "0.1.0",
+  "description": "Summarize the current tab in a new tab with one click.",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_icon": "icons/icon48.png", "default_title": "Summarize this page" },
+  "options_page": "options/options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
