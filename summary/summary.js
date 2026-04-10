@@ -48,8 +48,10 @@ function renderMarkdown(text) {
     // Single newline
     .replace(/\n/g, "<br>");
 
-  // Wrap consecutive <li> in <ul>
-  html = html.replace(/((?:<li>.*?<\/li>(?:<br>)?)+)/g, "<ul>$1</ul>");
+  // Wrap consecutive <li> in <ul>, remove <br> between items
+  html = html.replace(/((?:<li>.*?<\/li>(?:<br>)?)+)/g, (match) => {
+    return "<ul>" + match.replace(/<\/li><br><li>/g, "</li><li>") + "</ul>";
+  });
 
   return `<p>${html}</p>`;
 }

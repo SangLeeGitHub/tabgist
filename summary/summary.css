@@ -149,8 +149,12 @@ body {
 }
 
 .summary-content li {
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   color: var(--text-secondary);
+}
+
+.summary-content li::marker {
+  color: var(--accent);
 }
 
 /* Loading state */
