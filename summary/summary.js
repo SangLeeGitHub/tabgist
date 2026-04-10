@@ -92,8 +92,7 @@ async function startStreaming(data) {
   urlEl.style.display = "";
   actionsEl.style.display = "flex";
 
-  // Set up streaming container ONCE before the loop (same as original working code)
-  // Show "Generating summary..." as initial content until first token arrives
+  // Set up streaming container ONCE before the loop
   contentEl.innerHTML = '<div class="streaming-cursor" id="streamText"><div class="loading"><div class="spinner"></div><p>Generating summary...</p></div></div>';
   const streamText = document.getElementById("streamText");
 
@@ -101,69 +100,76 @@ async function startStreaming(data) {
   let firstTokenTime = 0;
   let chunkCount = 0;
 
-  try {
-    const provider = getProvider(data.config);
+  // Connect to service worker for streaming — avoids CORS/Origin issues with local servers
+  const port = chrome.runtime.connect({ name: "stream" });
 
-    for await (const chunk of provider.summarize(data.title, data.url, data.body)) {
-      // First token — record thinking time
+  port.onMessage.addListener((msg) => {
+    if (msg.type === "chunk") {
       if (!firstTokenTime) {
         firstTokenTime = performance.now();
       }
-
-      fullSummary += chunk;
+      fullSummary += msg.text;
       chunkCount++;
       streamText.innerHTML = renderMarkdown(fullSummary);
       streamText.className = "streaming-cursor rendered";
-    }
 
-    // Done streaming — remove cursor, show stats
-    const streamEndTime = performance.now();
-    streamText.className = "rendered";
-
-    // Stats
-    const totalTime = ((streamEndTime - streamStartTime) / 1000).toFixed(1);
-    const firstRespTime = firstTokenTime ? ((firstTokenTime - streamStartTime) / 1000).toFixed(1) : "—";
-    const genTime = firstTokenTime ? ((streamEndTime - firstTokenTime) / 1000) : 0;
-    const tps = genTime > 0 ? (chunkCount / genTime).toFixed(1) : "—";
-
-    // Check if output was truncated
-    const truncated = (provider.state.stopReason === "max_tokens" || provider.state.stopReason === "length");
-    const warnHtml = truncated
-      ? `<div class="stats" style="color:var(--error);">⚠ Output truncated (max_tokens reached). Increase Max Tokens in settings.</div>`
-      : "";
-
-    const statsHtml = `
-      <div class="stats">
-        ⏱ Thinking: ${firstRespTime}s · Total: ${totalTime}s · Speed: ${tps} t/s
-      </div>
-      ${warnHtml}
-    `;
-    contentEl.insertAdjacentHTML("beforeend", statsHtml);
-
-  } catch (err) {
-    // Preserve partial output if any exists
-    if (fullSummary) {
+    } else if (msg.type === "done") {
+      const streamEndTime = performance.now();
       streamText.className = "rendered";
+
+      const totalTime = ((streamEndTime - streamStartTime) / 1000).toFixed(1);
+      const firstRespTime = firstTokenTime ? ((firstTokenTime - streamStartTime) / 1000).toFixed(1) : "—";
+      const genTime = firstTokenTime ? ((streamEndTime - firstTokenTime) / 1000) : 0;
+      const tps = genTime > 0 ? (chunkCount / genTime).toFixed(1) : "—";
+
+      const truncated = (msg.stopReason === "max_tokens" || msg.stopReason === "length");
+      const warnHtml = truncated
+        ? `<div class="stats" style="color:var(--error);">⚠ Output truncated (max_tokens reached). Increase Max Tokens in settings.</div>`
+        : "";
+
       contentEl.insertAdjacentHTML("beforeend", `
-        <div class="error-state">
-          <p>${err.message}</p>
-          <button class="btn btn-primary" id="btnRetry">Retry</button>
+        <div class="stats">
+          ⏱ Thinking: ${firstRespTime}s · Total: ${totalTime}s · Speed: ${tps} t/s
         </div>
+        ${warnHtml}
       `);
-    } else {
-      contentEl.innerHTML = `
-        <div class="error-state">
-          <div class="error-icon">⚠️</div>
-          <h2>Summary Failed</h2>
-          <p>${err.message}</p>
-          <button class="btn btn-primary" id="btnRetry">Retry</button>
-        </div>
-      `;
+
+      port.disconnect();
+
+    } else if (msg.type === "error") {
+      if (fullSummary) {
+        streamText.className = "rendered";
+        contentEl.insertAdjacentHTML("beforeend", `
+          <div class="error-state">
+            <p>${msg.message}</p>
+            <button class="btn btn-primary" id="btnRetry">Retry</button>
+          </div>
+        `);
+      } else {
+        contentEl.innerHTML = `
+          <div class="error-state">
+            <div class="error-icon">⚠️</div>
+            <h2>Summary Failed</h2>
+            <p>${msg.message}</p>
+            <button class="btn btn-primary" id="btnRetry">Retry</button>
+          </div>
+        `;
+      }
+      document.getElementById("btnRetry")?.addEventListener("click", () => {
+        startStreaming(data);
+      });
+      port.disconnect();
     }
-    document.getElementById("btnRetry")?.addEventListener("click", () => {
-      startStreaming(data);
-    });
-  }
+  });
+
+  // Start streaming via service worker
+  port.postMessage({
+    type: "start",
+    config: data.config,
+    title: data.title,
+    url: data.url,
+    body: data.body,
+  });
 }
 
 async function init() {

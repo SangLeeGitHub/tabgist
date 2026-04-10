@@ -1,5 +1,7 @@
 // background.js — Service worker
-// Provider modules are loaded directly by the summary page; background only orchestrates.
+// Provider modules loaded for streaming via port messaging (avoids CORS/Origin issues).
+
+importScripts("providers/anthropic.js", "providers/openai.js", "providers/index.js");
 
 const RESTRICTED_SCHEMES = ["chrome:", "chrome-extension:", "about:", "edge:", "devtools:", "file:"];
 
@@ -146,5 +148,28 @@ chrome.action.onClicked.addListener(async (tab) => {
       body,
       config,
     },
+  });
+});
+
+// Streaming handler — summary page connects via port, API calls run here (no CORS issues)
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== "stream") return;
+
+  port.onMessage.addListener(async (msg) => {
+    if (msg.type !== "start") return;
+
+    const { config, title, url, body } = msg;
+
+    try {
+      const provider = getProvider(config);
+
+      for await (const chunk of provider.summarize(title, url, body)) {
+        port.postMessage({ type: "chunk", text: chunk });
+      }
+
+      port.postMessage({ type: "done", stopReason: provider.state.stopReason });
+    } catch (err) {
+      port.postMessage({ type: "error", message: err.message });
+    }
   });
 });
