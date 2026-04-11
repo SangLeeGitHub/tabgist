@@ -1,7 +1,5 @@
 // summary/summary.js
 
-const titleEl = document.getElementById("title");
-const urlEl = document.getElementById("sourceUrl");
 const actionsEl = document.getElementById("actions");
 const contentEl = document.getElementById("content");
 const btnRegenerate = document.getElementById("btnRegenerate");
@@ -11,6 +9,17 @@ const btnClose = document.getElementById("btnClose");
 
 let currentData = null;
 let fullSummary = "";
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function renderHeader(title, url) {
+  let html = "";
+  if (title) html += `<h1 class="stream-title">${escapeHtml(title)}</h1>`;
+  if (url) html += `<a class="stream-url" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>`;
+  return html;
+}
 
 function showLoading(message) {
   contentEl.innerHTML = `
@@ -57,8 +66,6 @@ function renderMarkdown(text) {
 }
 
 function showError(title, message) {
-  titleEl.textContent = title || "Error";
-  urlEl.style.display = "none";
   contentEl.innerHTML = `
     <div class="error-state">
       <div class="error-icon">⚠️</div>
@@ -69,8 +76,6 @@ function showError(title, message) {
 }
 
 function showNoKey() {
-  titleEl.textContent = "API Key Required";
-  urlEl.style.display = "none";
   contentEl.innerHTML = `
     <div class="no-key">
       <h2>Set up your API key</h2>
@@ -87,15 +92,14 @@ async function startStreaming(data) {
   currentData = data;
   fullSummary = "";
 
-  // Update header
-  titleEl.textContent = data.title || "Untitled";
-  urlEl.textContent = data.url;
-  urlEl.href = data.url;
-  urlEl.style.display = "";
+  // Update header inside content box
   actionsEl.style.display = "flex";
 
   // Set up streaming container ONCE before the loop
-  contentEl.innerHTML = '<div class="streaming-cursor" id="streamText"><div class="loading"><div class="spinner-wrap"><div class="spinner"></div><span class="spinner-timer" id="spinnerTimer">0.0s</span></div><p>Generating summary...</p></div></div>';
+  contentEl.innerHTML = `
+    ${renderHeader(data.title || "Untitled", data.url)}
+    <div class="streaming-cursor" id="streamText"><div class="loading"><div class="spinner-wrap"><div class="spinner"></div><span class="spinner-timer" id="spinnerTimer">0.0s</span></div><p>Generating summary...</p></div></div>
+  `;
   const streamText = document.getElementById("streamText");
 
   const streamStartTime = performance.now();
@@ -208,21 +212,12 @@ async function init() {
   }
 
   if (data.status === "no-key") {
-    titleEl.textContent = data.title || "Untitled";
-    urlEl.textContent = data.url;
-    urlEl.href = data.url;
     showNoKey();
     return;
   }
 
   if (data.status === "error") {
     showError("Error", data.error);
-    if (data.title) titleEl.textContent = data.title;
-    if (data.url) {
-      urlEl.textContent = data.url;
-      urlEl.href = data.url;
-      urlEl.style.display = "";
-    }
     return;
   }
 
@@ -232,11 +227,7 @@ async function init() {
   }
 
   // Still loading — keep waiting
-  titleEl.textContent = data.title || "Loading…";
-  if (data.url) {
-    urlEl.textContent = data.url;
-    urlEl.href = data.url;
-  }
+  showLoading("Loading…");
 }
 
 // Button handlers
@@ -246,7 +237,11 @@ btnRegenerate.addEventListener("click", () => {
 
 btnCopy.addEventListener("click", async () => {
   if (fullSummary) {
-    await navigator.clipboard.writeText(fullSummary);
+    const title = currentData?.title || "";
+    const url = currentData?.url || "";
+    const header = title + (url ? "\n" + url : "");
+    const text = header ? header + "\n\n" + fullSummary : fullSummary;
+    await navigator.clipboard.writeText(text);
     btnCopy.textContent = "✓ Copied";
     setTimeout(() => {
       btnCopy.textContent = "📋 Copy";

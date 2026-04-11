@@ -50,29 +50,27 @@ body {
   padding: 40px 24px;
 }
 
-/* Header */
-.header {
-  margin-bottom: 32px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.header h1 {
-  font-size: 1.5rem;
+/* Stream header (inside content box) */
+.stream-title {
+  font-size: 1.3rem;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: var(--text);
   line-height: 1.4;
 }
 
-.header .url {
-  font-size: 0.875rem;
+.stream-url {
+  display: block;
+  font-size: 0.8rem;
   color: var(--accent);
   text-decoration: none;
   word-break: break-all;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
 }
 
-.header .url:hover {
+.stream-url:hover {
   text-decoration: underline;
 }
 
