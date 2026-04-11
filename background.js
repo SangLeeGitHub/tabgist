@@ -9,7 +9,7 @@ function isRestrictedUrl(url) {
 
 async function getConfig() {
   const syncData = await chrome.storage.sync.get([
-    "provider", "baseUrl", "model", "maxTokens", "language",
+    "provider", "baseUrl", "model", "maxTokens", "language", "systemPrompt", "useMaxCompletionTokens",
   ]);
   const localData = await chrome.storage.local.get(["anthropicApiKey", "openaiApiKey"]);
   const provider = syncData.provider || "anthropic";
@@ -19,6 +19,8 @@ async function getConfig() {
     model: syncData.model || (provider === "anthropic" ? "claude-sonnet-4-6" : "gpt-4o-mini"),
     maxTokens: syncData.maxTokens || 2048,
     language: syncData.language || "auto",
+    systemPrompt: syncData.systemPrompt || "",
+    useMaxCompletionTokens: syncData.useMaxCompletionTokens || false,
     apiKey: provider === "anthropic" ? localData.anthropicApiKey : localData.openaiApiKey,
   };
 }

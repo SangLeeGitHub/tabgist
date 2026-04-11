@@ -95,19 +95,42 @@ async function startStreaming(data) {
   actionsEl.style.display = "flex";
 
   // Set up streaming container ONCE before the loop
-  contentEl.innerHTML = '<div class="streaming-cursor" id="streamText"><div class="loading"><div class="spinner"></div><p>Generating summary...</p></div></div>';
+  contentEl.innerHTML = '<div class="streaming-cursor" id="streamText"><div class="loading"><div class="spinner-wrap"><div class="spinner"></div><span class="spinner-timer" id="spinnerTimer">0.0s</span></div><p>Generating summary...</p></div></div>';
   const streamText = document.getElementById("streamText");
 
   const streamStartTime = performance.now();
   let firstTokenTime = 0;
   let chunkCount = 0;
 
+  // Update spinner timer while thinking
+  const spinnerTimer = document.getElementById("spinnerTimer");
+  const timerInterval = setInterval(() => {
+    const elapsed = ((performance.now() - streamStartTime) / 1000).toFixed(1);
+    spinnerTimer.textContent = `${elapsed}s`;
+  }, 100);
+
   try {
-    const provider = getProvider(data.config);
+    // Always read latest config from storage (settings may have changed since page opened)
+    const syncData = await chrome.storage.sync.get(["provider", "baseUrl", "model", "maxTokens", "language", "systemPrompt", "useMaxCompletionTokens"]);
+    const localData = await chrome.storage.local.get(["anthropicApiKey", "openaiApiKey"]);
+    const p = syncData.provider || data.config.provider;
+    const freshConfig = {
+      provider: p,
+      baseUrl: syncData.baseUrl || data.config.baseUrl,
+      model: syncData.model || data.config.model,
+      maxTokens: syncData.maxTokens || data.config.maxTokens,
+      language: syncData.language || data.config.language,
+      systemPrompt: syncData.systemPrompt || data.config.systemPrompt,
+      useMaxCompletionTokens: syncData.useMaxCompletionTokens || false,
+      apiKey: p === "anthropic" ? localData.anthropicApiKey : localData.openaiApiKey,
+    };
+
+    const provider = getProvider(freshConfig);
 
     for await (const chunk of provider.summarize(data.title, data.url, data.body)) {
       if (!firstTokenTime) {
         firstTokenTime = performance.now();
+        clearInterval(timerInterval);
       }
 
       fullSummary += chunk;
@@ -138,6 +161,7 @@ async function startStreaming(data) {
     `);
 
   } catch (err) {
+    clearInterval(timerInterval);
     if (fullSummary) {
       streamText.className = "rendered";
       contentEl.insertAdjacentHTML("beforeend", `

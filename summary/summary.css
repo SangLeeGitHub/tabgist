@@ -125,32 +125,36 @@ body {
 }
 
 .summary-content h2 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
   color: var(--text);
 }
 
 .summary-content h3 {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  margin: 20px 0 8px;
+  margin: 16px 0 6px;
   color: var(--text);
 }
 
 .summary-content p {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 .summary-content ul {
   padding-left: 20px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .summary-content li {
   margin-bottom: 2px;
   color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 .summary-content li::marker {
@@ -167,14 +171,31 @@ body {
   text-align: center;
 }
 
+.spinner-wrap {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 16px;
+}
+
 .spinner {
-  width: 36px;
-  height: 36px;
+  position: absolute;
+  inset: 0;
   border: 3px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin-bottom: 16px;
+}
+
+.spinner-timer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 @keyframes spin {
@@ -245,6 +266,8 @@ body {
 .rendered ul {
   list-style: disc;
 }
+
+/* Streaming progress (placeholder removed) */
 
 /* Stats */
 .stats {

@@ -31,6 +31,11 @@ const PRESETS = {
     baseUrl: "https://openrouter.ai/api/v1",
     model: "",
   },
+  zai: {
+    provider: "openai-compatible",
+    baseUrl: "https://api.z.ai/api/paas/v4",
+    model: "glm-5.1",
+  },
 };
 
 const $ = (id) => document.getElementById(id);
@@ -42,13 +47,18 @@ const els = {
   openaiKey: $("openaiKey"),
   baseUrl: $("baseUrl"),
   model: $("model"),
+  systemPrompt: $("systemPrompt"),
+  useMaxCompletionTokens: $("useMaxCompletionTokens"),
   maxTokens: $("maxTokens"),
   language: $("language"),
   btnSave: $("btnSave"),
   btnTest: $("btnTest"),
+  btnResetPrompt: $("btnResetPrompt"),
   testResult: $("testResult"),
   toast: $("toast"),
 };
+
+const DEFAULT_SYSTEM_PROMPT = "You summarize web pages concisely. Output format: 1) A 'Summary' section with 3-5 sentences, 2) A 'Key Points' section with 5-8 bullets. Write the summary in the same language as the source page.";
 
 // Load saved settings
 async function loadSettings() {
@@ -58,6 +68,8 @@ async function loadSettings() {
     "model",
     "maxTokens",
     "language",
+    "systemPrompt",
+    "useMaxCompletionTokens",
   ]);
   const localData = await chrome.storage.local.get(["anthropicApiKey", "openaiApiKey"]);
 
@@ -66,6 +78,8 @@ async function loadSettings() {
   if (syncData.model) els.model.value = syncData.model;
   if (syncData.maxTokens) els.maxTokens.value = syncData.maxTokens;
   if (syncData.language) els.language.value = syncData.language;
+  els.systemPrompt.value = syncData.systemPrompt || DEFAULT_SYSTEM_PROMPT;
+  if (syncData.useMaxCompletionTokens) els.useMaxCompletionTokens.checked = true;
   if (localData.anthropicApiKey) els.anthropicKey.value = localData.anthropicApiKey;
   if (localData.openaiApiKey) els.openaiKey.value = localData.openaiApiKey;
 
@@ -92,6 +106,8 @@ async function saveSettings() {
     baseUrl: els.baseUrl.value.trim(),
     model: els.model.value.trim(),
     maxTokens: parseInt(els.maxTokens.value, 10) || 2048,
+    systemPrompt: els.systemPrompt.value.trim(),
+    useMaxCompletionTokens: els.useMaxCompletionTokens.checked,
     language: els.language.value,
   };
 
@@ -238,6 +254,9 @@ els.provider.addEventListener("change", updatePlaceholders);
 // Button handlers
 els.btnSave.addEventListener("click", saveSettings);
 els.btnTest.addEventListener("click", testConnection);
+els.btnResetPrompt.addEventListener("click", () => {
+  els.systemPrompt.value = DEFAULT_SYSTEM_PROMPT;
+});
 
 // Init
 loadSettings();

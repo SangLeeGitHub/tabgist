@@ -15,6 +15,7 @@ async function* anthropicStream(config, systemPrompt, userMessage, state) {
     system: systemPrompt,
     messages: [{ role: "user", content: userMessage }],
     stream: true,
+    thinking: { type: "disabled" },
   };
 
   const headers = {

@@ -18,10 +18,15 @@ async function* openaiStream(config, systemPrompt, userMessage, state) {
     model: config.model || "gpt-4o-mini",
     messages,
     stream: true,
+    thinking: { type: "disabled" },
   };
 
   if (config.maxTokens) {
-    body.max_tokens = config.maxTokens;
+    if (config.useMaxCompletionTokens) {
+      body.max_completion_tokens = config.maxTokens;
+    } else {
+      body.max_tokens = config.maxTokens;
+    }
   }
 
   const headers = {

@@ -22,6 +22,7 @@
         <option value="llamacpp">llama.cpp server (localhost:8080)</option>
         <option value="ollama">Ollama (localhost:11434)</option>
         <option value="openrouter">OpenRouter (openrouter.ai)</option>
+        <option value="zai">Z.AI (glm-5.1)</option>
       </select>
     </div>
 
@@ -59,7 +60,13 @@
     </div>
     <div class="form-group">
       <label for="maxTokens">Max Tokens</label>
-      <input type="number" id="maxTokens" value="2048" min="128" max="8192">
+      <input type="number" id="maxTokens" value="2048" min="128" max="65536">
+    </div>
+    <div class="form-group">
+      <label>
+        <input type="checkbox" id="useMaxCompletionTokens">
+        Use <code>max_completion_tokens</code> instead of <code>max_tokens</code>
+      <p class="hint">Required for some models (e.g. o1, o3, gpt-5.4-nono).</p>
     </div>
 
     <!-- Language -->
@@ -76,6 +83,14 @@
         <option value="fr">Français</option>
         <option value="de">Deutsch</option>
       </select>
+    </div>
+
+    <!-- System Prompt -->
+    <div class="section-title">System Prompt</div>
+    <div class="form-group">
+      <label for="systemPrompt">System Prompt</label>
+      <textarea id="systemPrompt" rows="6"></textarea>
+      <button class="btn" id="btnResetPrompt" style="margin-top:6px;">Reset to Default</button>
     </div>
 
     <!-- Test & Save -->
